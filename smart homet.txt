@@ -1,0 +1,141 @@
+import RPi.GPIO as GPIO
+from flask import Flask, render_template, redirect, url_for
+
+# Setup Flask
+app = Flask(__name__)
+
+# Setup GPIO for controlling the light
+GPIO.setmode(GPIO.BOARD)  # Use physical pin numbering
+LIGHT_PIN = 17  # GPIO Pin connected to the light (or LED)
+GPIO.setup(LIGHT_PIN, GPIO.OUT)
+
+# Variable to track the light status
+light_status = False  # Initially, the light is off
+
+@app.route('/')
+def index():
+    global light_status
+    # Return the home page with the light status
+    return render_template('index.html', status=light_status)
+
+@app.route('/turn_on')
+def turn_on():
+    global light_status
+    GPIO.output(LIGHT_PIN, GPIO.HIGH)  # Turn on the light
+    light_status = True  # Update the light status
+    return redirect(url_for('index'))
+
+@app.route('/turn_off')
+def turn_off():
+    global light_status
+    GPIO.output(LIGHT_PIN, GPIO.LOW)  # Turn off the light
+    light_status = False  # Update the light status
+    return redirect(url_for('index'))
+
+@app.route('/status')
+def status():
+    return 'Light is ON' if light_status else 'Light is OFF'
+
+# Cleanup on exit
+@app.before_first_request
+def before_first_request():
+    print("Smart Home Automation System Initialized")
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    GPIO.cleanup()  # Cleanup GPIO to prevent warnings
+    print("GPIO cleanup completed.")
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+4. HTML Template (index.html):
+
+
+html
+
+
+Copy code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Automation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            color: #333;
+        }
+        .button {
+            padding: 20px;
+            margin: 10px;
+            font-size: 18px;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .status {
+            font-size: 24px;
+            margin-top: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smart Home Automation System</h1>
+    <div class="status">
+        {% if status %}
+            <p>Light is ON</p>
+        {% else %}
+            <p>Light is OFF</p>
+        {% endif %}
+    </div>
+    <div>
+        <a href="/turn_on"><button class="button">Turn On Light</button></a>
+        <a href="/turn_off"><button class="button">Turn Off Light</button></a>
+    </div>
+    <div>
+        <a href="/status"><button class="button">Check Status</button></a>
+    </div>
+</body>
+</html>
+vbnet
+Copy code
+Smart Home Automation System
+--------------------------------
+Light is OFF
+[ Turn On Light ] [ Turn Off Light ]
+[ Check Status ]
+After clicking Turn On Light, the light will turn on, and the status will change:
+
+After Turning On Light:
+
+Copy code
+Smart Home Automation System
+--------------------------------
+Light is ON
+[ Turn On Light ] [ Turn Off Light ]
+[ Check Status ]
+After clicking Turn Off Light, the light will turn off, and the status will change:
+
+After Turning Off Light:
+
+vbnet
+Copy code
+Smart Home Automation System
+--------------------------------
+Light is OFF
+[ Turn On Light ] [ Turn Off Light ]
+[ Check Status ]
+8. Additional Features to Add:
+To extend this project, you could add:
+
